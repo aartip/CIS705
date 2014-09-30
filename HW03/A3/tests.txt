@@ -1,0 +1,315 @@
+
+Test cases for Exercise 3
+
+
+PART C
+--------------
+
+Test case 1:
+
+print nil;
+print new {int x = 9;}
+
+Output should be:
+
+Parse tree:
+[[], [['print', 'nil'], ['print', ['new', ['struct', [['int', 'x', '9']]]]]]]
+Execution:
+nil
+activation stack = ['h0']
+heap = {
+  h0 : {'parentns': 'nil'}
+}
+h1
+activation stack = ['h0']
+heap = {
+  h0 : {'parentns': 'nil'}
+  h1 : {'parentns': 'h0', 'x': 9}
+}
+Successful termination.
+activation stack = ['h0']
+heap = {
+  h0 : {'parentns': 'nil'}
+  h1 : {'parentns': 'h0', 'x': 9}
+}
+
+
+
+Test case 2:
+
+int y = 9;
+ob z = new {int val = y; 
+            proc inc(x): val = (val + x) end;
+           };
+!
+
+Output should be:
+
+Parse tree:
+[[['int', 'y', '9'], ['ob', 'z', ['new', ['struct', [['int', 'val', ['deref', '']], ['proc', 'inc', ['x'], [], [['=', 'val', ['+', ['deref', 'val'], ['deref','x']]]]]]]]]], []]
+Execution:
+Successful termination.
+activation stack = ['h0']
+heap = {
+  h0 : {'y': 9, 'parentns': 'nil', 'z': 'h1'}
+  h1 : {'parentns': 'h0', 'val': 9, 'inc': 'h2'}
+  h2 : {'body': [['=', 'val', ['+', ['deref', 'val'], ['deref', 'x']]]], 'param': ['x'], 'type': 'proc', 'link': 'h1', 'locals': []}
+}
+
+
+
+Test case 3:
+
+ob counter  = new {int val = 5;
+                   proc inc(x) : val = (val + x); end;
+                  };
+print counter.val;
+counter.inc(6);
+counter.inc(3);
+
+
+Output should print 5 and then finish with  counter.val == 14.
+
+
+
+
+Test case 4: (This requires that you completed Part B of Assignment 2.)
+
+int g = 2;
+ob a =  new { int x = (g + 1);
+              ob y = new { int z = (x + g); };
+              int z = 99;
+              proc p(z): int w = z;
+                         print w;
+                         x = (z + y.z) end;
+            };
+a.p(a.y.z)
+
+
+Output should be:
+
+Execution:
+5
+activation stack = ['h0', 'h4']
+heap = {
+  h0 : {'a': 'h1', 'parentns': 'nil', 'g': 2}
+  h1 : {'y': 'h2', 'parentns': 'h0', 'z': 99, 'p': 'h3', 'x': 3}
+  h2 : {'parentns': 'h1', 'z': 5}
+  h3 : {'body': [['print', ['deref', 'w']], ['=', 'x', ['+', ['deref', 'z'], ['d
+eref', ['dot', 'y', 'z']]]]], 'params': ['z'], 'type': 'proc', 'link': 'h1', 'lo
+cals': [['int', 'w', ['deref', 'z']]]}
+  h4 : {'parentns': 'h1', 'z': 5, 'w': 5}
+}
+Successful termination.
+activation stack = ['h0']
+heap = { ... }
+
+
+------------
+PART D
+------------
+
+Test case 5:
+
+class counter : {int val = 1;
+                 proc inc() : val = (val + 1); print val; end;};
+ob c = new counter;
+ob d = new counter;
+c.inc();  d.inc();
+
+
+Output should be:
+
+Execution:
+2
+activation stack = ['h0', 'h6']
+heap = {
+  h0 : {'parentns': 'nil', 'c': 'h2', 'counter': 'h1', 'd': 'h4'}
+  h1 : {'body': ['struct', [['int', 'val', '1'], ['proc', 'inc', [], [], [['=',
+'val', ['+', ['deref', 'val'], '1']], ['print', ['deref', 'val']]]]]], 'link': '
+h0', 'type': 'class'}
+  h2 : {'parentns': 'h0', 'val': 2, 'inc': 'h3'}
+  h3 : {'body': [['=', 'val', ['+', ['deref', 'val'], '1']], ['print', ['deref',
+ 'val']]], 'params': [], 'type': 'proc', 'link': 'h2', 'locals': []}
+  h4 : {'parentns': 'h0', 'val': 1, 'inc': 'h5'}
+  h5 : {'body': [['=', 'val', ['+', ['deref', 'val'], '1']], ['print', ['deref',
+ 'val']]], 'params': [], 'type': 'proc', 'link': 'h4', 'locals': []}
+  h6 : {'parentns': 'h2'}
+}
+2
+activation stack = ['h0', 'h7']
+heap = {
+  h0 : {'parentns': 'nil', 'c': 'h2', 'counter': 'h1', 'd': 'h4'}
+  h1 : {'body': ['struct', [['int', 'val', '1'], ['proc', 'inc', [], [], [['=',
+'val', ['+', ['deref', 'val'], '1']], ['print', ['deref', 'val']]]]]], 'link': '
+h0', 'type': 'class'}
+  h2 : {'parentns': 'h0', 'val': 2, 'inc': 'h3'}
+  h3 : {'body': [['=', 'val', ['+', ['deref', 'val'], '1']], ['print', ['deref',
+ 'val']]], 'params': [], 'type': 'proc', 'link': 'h2', 'locals': []}
+  h4 : {'parentns': 'h0', 'val': 2, 'inc': 'h5'}
+  h5 : {'body': [['=', 'val', ['+', ['deref', 'val'], '1']], ['print', ['deref',
+ 'val']]], 'params': [], 'type': 'proc', 'link': 'h4', 'locals': []}
+  h6 : {'parentns': 'h2'}
+  h7 : {'parentns': 'h4'}
+}
+Successful termination.
+activation stack = ['h0']
+heap = { ... }
+
+
+
+
+Test case 6:
+
+
+int x = 0;
+class a : { int y = (x + 1); };
+class b : { ob m = new a;
+            proc inc(howmuch) : m.y = (m.y + howmuch) end;
+          };
+ob y = new b;
+y.inc(4);
+print y.m.y
+!
+
+Should construct an object for  b  and an object for  b.m  and print  5.
+
+
+
+
+Test case 7: (This requires that you completed Part B of Assignment 2.)
+
+int initial = 0;
+class Clock : { int increment = 1;
+                class Counter : { int val  = initial;
+                                  proc tick() : val = (val + increment) end;
+                                };
+                
+                ob minutes = new Counter;
+                ob seconds = new Counter;
+
+                proc tick(): if (seconds.val - 59) :
+                                  seconds.tick()
+                             else
+                                  seconds.val = 0;
+                                  minutes.tick()   
+                             end
+                end;
+              };
+ob c = new Clock;
+c.tick(); c.tick()
+
+
+Output:  (notice that  c.seconds.val == 2  and  c.minutes.val == 0)
+
+Successful termination.
+activation stack = ['h0']
+heap = {
+  h0 : {'parentns': 'nil', 'c': 'h2', 'initial': 0, 'Clock': 'h1'}
+
+  h1 : {'body': [...Clock code...], 'link': 'h0', 'type': 'class'}
+
+  h10 : {'parentns': 'h6'}
+  h11 : {'parentns': 'h2'}
+  h12 : {'parentns': 'h6'}
+
+  h2 : {'seconds': 'h6', 'Counter': 'h3', 'parentns': 'h0', 'increment':1, 'tick': 'h8', 'minutes': 'h4'}
+
+  h3 : {'body': [...Counter code...], 'link': 'h2', 'type': 'class'}
+
+  h4 : {'parentns': 'h2', 'tick': 'h5', 'val': 0}
+
+  h5 : {'body': [...Counter.tick code...], 'params': [], 'type': 'proc', 'link': 'h4', 'locals': []}
+
+  h6 : {'parentns': 'h2', 'tick': 'h7', 'val': 2}
+
+  h7 : {'body': [...Counter.tick code...], 'params': [], 'type': 'proc', 'link': 'h6', 'locals': []}
+
+  h8 : {'body': [...Clock.tick code...], 'params': [], 'type': 'proc', 'link': 'h2', 'locals': []}
+
+  h9 : {'parentns': 'h2'}
+}
+
+
+
+
+
+-----------------
+PART E
+-----------------
+
+Test case 8:
+
+class C : { int x = 2;
+            proc p(y) : x = (x + y);  end;
+          };
+class D : extend C with { int z = 9; };
+ob a = new C;
+ob b = new D;
+b.p(a.x)
+!
+
+At termination, there is an object for  a  whose x is 2,
+and there is an object for  b  whose z is 9 and whose x is 11.
+
+
+
+Test case 9:
+
+class counter : { int val = 0; 
+                  proc tick() : val = (val + 1); end;
+                  proc set(t) : val = t; end;
+};
+class timer : extend counter with {
+                 int default = 60;
+                 override tick() :
+                    if val : val = (val - 1);
+                    else set(default)  end
+                 end;  };
+ob c = new timer;
+c.tick(); c.tick();
+!
+
+When the program terminates,
+there is an object for c holding val = 59, default = 60, method set from class counter, and method tick from class timer.
+
+
+
+Test case 10:  (lots of trouble in here!)
+
+class widget : {
+   int x = 1;
+   proc paint() : print x end;         
+   proc refresh() : paint() end;
+   class nestedwidget : { int w = x; };
+};
+
+class mywidget : extend widget with {   
+   int y = 2;
+   override paint() : print (x + y) end;
+};
+
+proc p(x) : class pwidget : extend widget with { int z = x; };
+            ob c = new pwidget;
+            print c.z;
+end;
+
+ob a = new widget;   
+ob b = new mywidget;
+int x = 9;
+class awidget : extend a.nestedwidget with { };
+ob aa = new awidget;
+
+a.refresh();  
+b.refresh();
+print aa.w;
+p(6);
+!
+
+The calls to  a.refresh and b.refresh must print  1  then  3  for sure.
+
+Print aa.w  should print  1 (not 9!) if you have correctly revised the semantics of class call.
+
+Finally,  p(6)  will likely print  1,  even though this "looks wrong" --- we expect 6!   This is a flaw of my suggested implementation of subclasses, and it is difficult to repair!  (So, forget it, or rebuild everything as described in Section 6.5.)
+
+

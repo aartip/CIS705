@@ -196,12 +196,11 @@ def interpretETREE(etree) :
         handle, field = interpretLTREE(etree[1])
         ans = lookup(handle,field)
     # implement "nil" to have itself as its value
-    elif  etree[0] == "nil" :
-		ans = "nil"
+    elif etree[0] == "nil" :
+        ans = "nil"
     # implement ["new", T] to call interpretTTREE(T), whose job is to allocate an object, fill it with T, and return the object's handle
     elif etree[0] == "new" :
-    	ans = interpretTTREE(etree[1])
-
+        ans = interpretTTREE(etree[1])
     else :  crash(etree, "invalid expression form")
     return ans
 
