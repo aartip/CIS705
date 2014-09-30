@@ -56,7 +56,7 @@ def interpretDLIST(dlist) :
 
 def interpretDTREE(d) :
     """pre: d  is a declaration represented as a DTREE:
-       DTREE ::=  int I = E | proc I ( IL ) : CL end
+       DTREE ::=  ["int", ID, ETREE]  |  ["proc", ID, ILIST, DLIST, CLIST]  |  ["ob", ID, ETREE]
        post:  heap is updated with  d
     """
     # pass
@@ -80,6 +80,22 @@ def interpretDTREE(d) :
                 declare(newNS, "body", d[4])
                 declare(newNS, "type", "proc")
                 declare(newNS, "link", activeNS())
+        elif operator == "ob" :
+        	
+        	# computes the meaning of E
+        	rval = interpretETREE(d[2])
+
+        	# validate that E is either a handle to an object or is nil
+        	if isLValid(heap, rval) or (rval == nil) : 
+        		
+        		# binds I to the meaning in the active namespace (provided that I is not declared there)
+        		if isLValid(activeNS(), rval) : 
+        			crash (d, "redeclare object")
+        		else :
+        			declare(activeNS(), d[1], rval)
+        	else :
+        		crash (d, "invalid obj declaration")
+
         else :
             crash(d, "invalid declaration")
 
@@ -161,7 +177,7 @@ def interpretCTREE(c) :
 
 def interpretETREE(etree) :
     """interpretETREE computes the meaning of an expression operator tree.
-         ETREE ::=  NUM  |  [OP, ETREE, ETREE] |  ["deref", LTREE] 
+         ETREE ::=  NUM  |  [OP, ETREE, ETREE] |  ["deref", LTREE]  |  "nil"  |  ["new", TTREE] 
          OP ::= "+" | "-"
         post: updates the heap as needed and returns the  etree's value
     """
@@ -179,16 +195,46 @@ def interpretETREE(etree) :
     elif  etree[0] == "deref" :    # ["deref", LTREE]
         handle, field = interpretLTREE(etree[1])
         ans = lookup(handle,field)
+    # implement "nil" to have itself as its value
+    elif  etree[0] == "nil" :
+		ans = "nil"
+    # implement ["new", T] to call interpretTTREE(T), whose job is to allocate an object, fill it with T, and return the object's handle
+    elif etree[0] == "new" :
+    	ans = interpretTTREE(etree[1])
+
     else :  crash(etree, "invalid expression form")
     return ans
+
+def interpretTTREE(ttree) :
+	"""interpretTTREE computes the meaning of a template tree
+		 TTREE ::=  ["struct", DLIST]  
+	   post: returns the popped handle as its value
+	"""
+	# allocates a new namespace and pushes the namespace's handle on the activation stack
+	newNS = allocateNS
+	push(newNS)
+
+	# evaluate DLIST
+	interpretDLIST(ttree[1])
+
+	# pops the activation stack and returns the popped handle as its answer
+	return pop();
+
 
 
 def interpretLTREE(ltree) :
     """interpretLTREE computes the meaning of a lefthandside operator tree.
-          LTREE ::=  ID
+          LTREE ::=  ID  |  ["dot", LTREE, ID]
        post: returns a pair,  (handle,varname),  the L-value of  ltree
     """
-    if isinstance(ltree, str) and  ltree[0].isalpha()  :  #  ID 
+    # compute the handle name by L, call it h
+    if ltree[0] == "dot" :
+    	h = interpretLTREE(ltree[1])
+    	if isLValid(h, ltree[2]) :
+    		ans = (h, ltree[2])
+    	else :
+    		crash(ltree, "cannot find variable in object")
+    elif isinstance(ltree, str) and  ltree[0].isalpha()  :  #  ID 
         
         # uses a loop to follow the parentns links to locate nonlocal variables
         currentNS = activeNS()
