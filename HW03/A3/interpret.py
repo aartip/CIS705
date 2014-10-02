@@ -208,20 +208,26 @@ def interpretETREE(etree) :
     return ans
 
 def interpretTTREE(ttree) :
-	"""interpretTTREE computes the meaning of a template tree
-		 TTREE ::=  ["struct", DLIST]  
-	   post: returns the popped handle as its value
-	"""
-	# allocates a new namespace and pushes the namespace's handle on the activation stack
-	newNS = allocateNS
-	push(newNS)
-
-	# evaluate DLIST
-	interpretDLIST(ttree[1])
-
-	# pops the activation stack and returns the popped handle as its answer
-	return pop();
-
+    """interpretTTREE computes the meaning of a template tree
+       TTREE ::=  ["struct", DLIST]  |  ["call", LTREE]
+       post: returns the popped handle as its value
+    """
+    if ttree[0] == "struct" : 
+        # allocates a new namespace and pushes the namespace's handle on the activation stack
+        newNS = allocateNS
+        push(newNS)
+        # evaluate DLIST
+        interpretDLIST(ttree[1])
+        # pops the activation stack and returns the popped handle as its answer
+    	return pop()
+    elif ttree[0] == "call" :
+        # L is computed to a handle
+        # The closure labelled by the handle is extracted from the heap
+        # Provided that closure holds a class
+        # The TTREE within the closure is extracted and executed
+        pass
+    else :
+        pass
 
 
 def interpretLTREE(ltree) :
