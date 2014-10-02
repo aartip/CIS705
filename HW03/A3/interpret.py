@@ -5,14 +5,14 @@
 
 PTREE ::=  DLIST CLIST
 DLIST ::=  [ DTREE* ]
-DTREE ::=  ["int", ID, ETREE]  |  ["proc", ID, ILIST, DLIST, CLIST]  |  ["ob", ID, ETREE]
+DTREE ::=  ["int", ID, ETREE]  |  ["proc", ID, ILIST, DLIST, CLIST]  |  ["ob", ID, ETREE]  |  ["class", ID, TTREE]
 CLIST ::=  [ CTREE* ]
 CTREE ::=  ["=", LTREE, ETREE]  |  ["if", ETREE, CLIST, CLIST]
         |  ["print", ETREE]  |  ["call", LTREE, ELIST]
 ELIST ::=  [ ETREE* ]
 ETREE ::=  NUM  |  [OP, ETREE, ETREE] |  ["deref", LTREE]  |  "nil"  |  ["new", TTREE]
       where  OP ::= "+" | "-"
-TTREE ::=  ["struct", DLIST]
+TTREE ::=  ["struct", DLIST]  |  ["call", LTREE]
 LTREE ::=  ID  |  ["dot", LTREE, ID]
 
 NUM   ::=  a nonempty string of digits
@@ -56,7 +56,7 @@ def interpretDLIST(dlist) :
 
 def interpretDTREE(d) :
     """pre: d  is a declaration represented as a DTREE:
-       DTREE ::=  ["int", ID, ETREE]  |  ["proc", ID, ILIST, DLIST, CLIST]  |  ["ob", ID, ETREE]
+       DTREE ::=  ["int", ID, ETREE]  |  ["proc", ID, ILIST, DLIST, CLIST]  |  ["ob", ID, ETREE]  |  ["class", ID, TTREE]
        post:  heap is updated with  d
     """
     # pass
@@ -81,13 +81,10 @@ def interpretDTREE(d) :
                 declare(newNS, "type", "proc")
                 declare(newNS, "link", activeNS())
         elif operator == "ob" :
-        	
         	# computes the meaning of E
         	rval = interpretETREE(d[2])
-
         	# validate that E is either a handle to an object or is nil
-        	if isLValid(heap, rval) or (rval == nil) : 
-        		
+        	if isLValid(heap, rval) or (rval == nil) :         		
         		# binds I to the meaning in the active namespace (provided that I is not declared there)
         		if isLValid(activeNS(), rval) : 
         			crash (d, "redeclare object")
@@ -95,6 +92,12 @@ def interpretDTREE(d) :
         			declare(activeNS(), d[1], rval)
         	else :
         		crash (d, "invalid obj declaration")
+        elif operator == "class" :
+            # I is bound to a closure containing T and its link to global variables
+            newNS = allocateNS()
+            declare(activeNS(), d[1], newNS)
+            declare(newNS, "body", d[2])
+            declare(newNS, "type", "class")
 
         else :
             crash(d, "invalid declaration")
