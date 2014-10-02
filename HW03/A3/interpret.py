@@ -131,7 +131,6 @@ def interpretCTREE(c) :
             interpretCLIST(c[2])
         else :
             interpretCLIST(c[3])
-
     elif operator == "call" :   # call command, ["call", L, EL]
         # Compute the meaning of L, verify that the meaning is the handle to a procedure closure
         handle, field = interpretLTREE(c[1])
@@ -145,13 +144,10 @@ def interpretCTREE(c) :
         inputList = []
         for expression in c[2] :
         	inputList.append(interpretETREE(expression))
-
         # Allocate a new namespace
         newNS = allocateNS()
-
         # Within the new namespace, bind parentns to the handle extracted from the closure
         declare(newNS, "parentns", link)
-
         # Make certain that the number of arguments in EL equals the number of parameters in IL
         if len(inputList) == len(paramsList) : 
             # bind the values from EL to the corresponding names in IL
@@ -159,14 +155,11 @@ def interpretCTREE(c) :
             while iteration < len(inputList) :
                     declare(newNS, paramsList[iteration], inputList[iteration])
                     iteration = iteration + 1
-
         # Otherwise, it's an error that prints a message and stops execution
         else : 
             crash(c, "Parameter error")
-
         # Push the new namespace's handle onto the activation stack
         push(newNS)
-
         # execute DL
         interpretDLIST(localvars)
         # execute CL
@@ -212,7 +205,7 @@ def interpretTTREE(ttree) :
        TTREE ::=  ["struct", DLIST]  |  ["call", LTREE]
        post: returns the popped handle as its value
     """
-    if ttree[0] == "struct" : 
+    if ttree[0] == "struct" : # ["struct", DLIST]
         # allocates a new namespace and pushes the namespace's handle on the activation stack
         newNS = allocateNS
         push(newNS)
@@ -220,14 +213,18 @@ def interpretTTREE(ttree) :
         interpretDLIST(ttree[1])
         # pops the activation stack and returns the popped handle as its answer
     	return pop()
-    elif ttree[0] == "call" :
+    elif ttree[0] == "call" : # ["call", LTREE]
         # L is computed to a handle
+        handle, field = interpretLTREE(ttree[1])
+        classHandle = lookup(handle, field)
         # The closure labelled by the handle is extracted from the heap
+        body = lookup(classHandle, "body")
         # Provided that closure holds a class
-        # The TTREE within the closure is extracted and executed
-        pass
+        if lookup(classHandle, "type") == "class" :
+            # The TTREE within the closure is extracted and executed
+            interpretTTREE(body)       
     else :
-        pass
+        crash(ttree, "invalid ttree")
 
 
 def interpretLTREE(ltree) :
